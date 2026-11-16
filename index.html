@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Berg Trailers | 2027 Digital Catalog</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 25%,#244d72,#061522 78%);font:16px Arial,Helvetica,sans-serif;color:#f5f8fc;min-height:100vh}header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px clamp(14px,4vw,65px);background:#051626;border-bottom:2px solid #258ac2}header b{font-size:clamp(16px,2vw,22px);letter-spacing:.04em}header b span{color:#60b7ec}a,button{border:0;border-radius:7px;background:#1378b4;color:white;text-decoration:none;font:600 14px Arial;padding:12px 16px;cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}main{text-align:center;padding:14px 12px 26px}.status{min-height:24px;color:#c8deed;font-size:14px}.viewer{display:flex;justify-content:center;align-items:center;min-height:65vh;perspective:1500px}.spread{display:flex;align-items:stretch;justify-content:center;max-width:96vw;max-height:72vh;filter:drop-shadow(0 15px 22px #0009);transition:transform .25s ease,opacity .25s ease}.spread.turn{transform:rotateY(-12deg);opacity:.65}.spread canvas{display:block;width:auto;height:auto;max-height:72vh;max-width:47vw;object-fit:contain;background:#fff}.spread.single canvas{max-width:85vw}.spread canvas+canvas{box-shadow:inset 2px 0 7px #0006}.controls{display:flex;justify-content:center;align-items:center;gap:16px;margin:16px 0}.controls span{min-width:135px;font-size:14px}.note{font-size:12px;color:#b0c6d8;margin:8px}footer{color:#86a9c4;font-size:11px;padding:14px}@media(max-width:650px){.viewer{min-height:52vh}.spread canvas{max-height:60vh}.spread.single canvas{max-width:90vw}.controls{gap:8px}button{padding:11px 12px;font-size:13px}}
+</style>
+</head>
+<body>
+<header><b>BERG <span>TRAILERS</span> | 2027 CATALOG</b><a href="Berg_Trailers_Catalog_2027.pdf" download>Download PDF ↓</a></header>
+<main><div class="status" id="status">Loading catalog…</div><div class="viewer"><div class="spread single" id="spread"><canvas id="left" aria-label="Catalog page"></canvas><canvas id="right" style="display:none" aria-label="Facing catalog page"></canvas></div></div><div class="controls"><button id="prev" disabled>← Previous</button><span id="counter">Cover</span><button id="next" disabled>Next →</button></div><p class="note">Use the arrows or keyboard ← → to turn pages.</p><footer>BERG TRAILERS · DIGITAL PRODUCT CATALOG</footer></main>
+<script type="module">
+import * as pdfjs from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
+pdfjs.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+const file='Berg_Trailers_Catalog_2027.pdf', left=document.getElementById('left'),right=document.getElementById('right'),spread=document.getElementById('spread'),status=document.getElementById('status'),counter=document.getElementById('counter'),prev=document.getElementById('prev'),next=document.getElementById('next');
+let pdf,spreads=[],position=0,busy=false;
+async function paint(pageNumber,canvas){const page=await pdf.getPage(pageNumber);const vp=page.getViewport({scale:1.5});canvas.width=Math.round(vp.width);canvas.height=Math.round(vp.height);await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;}
+async function show(index){if(!pdf||busy||index<0||index>=spreads.length)return;busy=true;prev.disabled=next.disabled=true;spread.classList.add('turn');try{const pages=spreads[index];await paint(pages[0],left);right.style.display=pages.length===2?'block':'none';spread.classList.toggle('single',pages.length===1);if(pages.length===2)await paint(pages[1],right);position=index;counter.textContent=pages.length===1?`Page ${pages[0]} of ${pdf.numPages}`:`Pages ${pages[0]}–${pages[1]} of ${pdf.numPages}`;status.textContent='';}catch(err){status.textContent='Could not display catalog: '+err.message}finally{spread.classList.remove('turn');busy=false;prev.disabled=position===0;next.disabled=position===spreads.length-1;}}
+prev.addEventListener('click',()=>show(position-1));next.addEventListener('click',()=>show(position+1));document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(position+1);if(e.key==='ArrowLeft')show(position-1)});
+try{pdf=await pdfjs.getDocument(file).promise;spreads=[[1]];for(let i=2;i<pdf.numPages;i+=2){if(i+1<pdf.numPages)spreads.push([i,i+1]);else spreads.push([i]);}if(pdf.numPages>1)spreads.push([pdf.numPages]);await show(0);}catch(err){status.textContent='Catalog could not load. Make sure '+file+' is uploaded next to index.html.';console.error(err)}
+</script>
+</body></html>
